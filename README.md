@@ -39,3 +39,28 @@ npm run test:unit
 ```sh
 npm run lint
 ```
+
+```javascript
+const { MongoClient } = require("mongodb");
+
+
+const url = `mongodb+srv://root:1234@localhost:27017/todos`;
+
+const client = new MongoClient(uri);
+
+async function run() {
+    console.log("hello");
+    try {
+        const database = client.db('todos');
+        const movies = database.collection('movies');
+        // Query for a movie that has the title 'Back to the Future'
+        const query = { title: 'Back to the Future' };
+        const movie = await movies.findOne(query);
+        console.log(movie);
+    } finally {
+        // Ensures that the client will close when you finish/error
+        await client.close();
+    }
+}
+run().catch(console.dir);
+```
