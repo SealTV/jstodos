@@ -13,7 +13,7 @@
     "url": "git+https://github.com/SealTV/web3zombie.git"
   },
   "author": "SealTV",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/SealTV/web3zombie/issues"
   },

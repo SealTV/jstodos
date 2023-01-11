@@ -35,7 +35,6 @@ app.get('/', (req, res) => {
     res.jsonp({changed: count});
 });
 
-app.use('/app', express.static(__dirname + '/ui/dist'));
 
 app.listen(port, () => {
     console.log(`Server running at http://${hostname}:${port}/`);
