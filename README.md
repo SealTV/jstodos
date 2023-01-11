@@ -40,6 +40,11 @@ npm run test:unit
 npm run lint
 ```
 
-```javascript
 
-```
+## Routes
+
+- **/v1**
+  - GET */* - Get list of objects
+  - POST */*  - Add new object
+  - PUT */id* - Update object by id
+  - DELETE */id* - Delete object by id

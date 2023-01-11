@@ -1,17 +1,28 @@
-const http = require('http');
-const express  = require ('express');
-const cors = require ('cors');
+const express =  require('express');
+const cors = require('cors');
+const { MongoClient } = require("mongodb");
+
+const server = require("./router/server.js");
 
 const hostname = '127.0.0.1';
 const port = 3000;
-const { MongoClient } = require("mongodb");
+
+const app = express();
+app.use(cors())
+app.use('/v1', server);
+
+function startServer() {
+    app.listen(port, () => {
+        console.log(`Server running at http://${hostname}:${port}/`);
+    });
+}
+
 
 const url = `mongodb://root:1234@localhost:27017/todos`;
 
 const client = new MongoClient(url);
 
 async function run() {
-    console.log("hello");
     try {
         const database = client.db('todos');
         const movies = database.collection('movies');
@@ -26,24 +37,13 @@ async function run() {
 }
 run().catch(console.dir);
 
-let count = 1;
-
-const app = express();
-app.use(cors())
-
-app.get('/', (req, res) => {
-    res.jsonp({changed: count});
-});
-
-
-app.listen(port, () => {
-    console.log(`Server running at http://${hostname}:${port}/`);
-});
-
+var count = 0;
 const background = function() {
     // console.log("background execute");
     setTimeout(background, 5000);
     count++;
 }
+
+startServer();
 
 background();
