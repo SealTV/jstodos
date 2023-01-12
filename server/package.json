@@ -8,7 +8,7 @@
     "dev": "supervisor ./src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "type": "commonjs",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SealTV/web3zombie.git"

@@ -1,11 +1,11 @@
 'use strict';
 
-const { MongoClient, Db } = require("mongodb");
+import { MongoClient, Db } from "mongodb";
 
 /**
  * 
  */
-exports.TodosRepo = class {
+export class TodosRepo {
     /**
      * @param {Db} Db - MongoDB database
      */

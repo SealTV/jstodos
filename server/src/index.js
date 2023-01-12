@@ -1,11 +1,11 @@
 'use strict';
 
-const express =  require('express');
-const cors = require('cors');
-const { MongoClient } = require("mongodb");
+import express, { json, urlencoded } from 'express';
+import cors from 'cors';
+import { MongoClient } from "mongodb";
 
-const { Server } = require("./router/server.js");
-const { TodosRepo } = require("./repository/todosrepo.js");
+import { Server } from "./router/server.js";
+import { TodosRepo } from "./repository/todosrepo.js";
 
 const hostname = '127.0.0.1';
 const port = 3000;
@@ -26,8 +26,8 @@ function startServer() {
     const srv = new Server(tRepo);
 
     app.use(cors())
-    app.use(express.json()) // for parsing application/json
-    app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
+    app.use(json()) // for parsing application/json
+    app.use(urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
     app.use('/v1', srv.getRouter());
 
     app.listen(port, () => {

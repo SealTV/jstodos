@@ -1,9 +1,9 @@
 'use strict';
 
-const express = require('express');
-const { TodosRepo } = require('./../repository/todosrepo.js');
+import { Router } from 'express';
+import { TodosRepo } from './../repository/todosrepo.js';
 
-exports.Server = class {
+export class Server {
     /**
      * 
      * @param {TodosRepo} todosRepo 
@@ -14,10 +14,10 @@ exports.Server = class {
 
     /**
      * 
-     * @returns {express.Router}
+     * @returns {Router}
      */
     getRouter() {
-        let r = express.Router();
+        let r = Router();
 
         r.get('/', (req, res) => {
             this.repo.getTodos()
