@@ -27,7 +27,11 @@ export class Server {
         });
 
         r.post('/', (req, res) => {
-            this.repo.addTodo(req.body)
+            let newTodo = req.body;
+            newTodo.created_at = Date.now();
+            newTodo.done = false;
+
+            this.repo.addTodo(letNewTodo)
                 .then(result => {
                     res.status(202).jsonp({ data: result });
                 })
@@ -37,13 +41,29 @@ export class Server {
         });
 
         r.put('/:todoID', (req, res) => {
-            console.log(req.params);
-            res.status(500).json({ error: "not implemented" });
+            const todoID = req.params.todoID;
+            let todo = req.body;
+            todo.updated_at = Date.now();
+
+            this.repo.updateTodo(todoID, todo)
+                .then(result => {
+                    res.status(202).jsonp({ data: result });
+                })
+                .catch(err => {
+                    res.status(500).jsonp({ error: err });
+                });
         });
 
         r.delete('/:todoID', (req, res) => {
-            console.log(req.params);
-            res.status(500).json({ error: "not implemented" });
+            const todoID = req.params.todoID;
+
+            this.repo.deleteTodo(todoID)
+                .then(result => {
+                    res.status(202).jsonp({ data: result });
+                })
+                .catch(err => {
+                    res.status(500).jsonp({ error: err });
+                });
         });
 
         return r

@@ -1,6 +1,6 @@
 'use strict';
 
-import { MongoClient, Db } from "mongodb";
+import { MongoClient, Db, ObjectId } from "mongodb";
 
 /**
  * 
@@ -27,9 +27,13 @@ export class TodosRepo {
     }
 
     async updateTodo(id, doc) {
-        const filter = {_id: id};
+        if (!ObjectId.isValid(id)) {
+            return;
+        }
 
-        const options = {upsert: true};
+        const objectID = ObjectId(id);
+        const filter = { _id: objectID };
+        const options = { upsert: true };
 
         const updateDoc = {
             $set: doc
@@ -41,7 +45,12 @@ export class TodosRepo {
 
 
     async deleteTodo(id) {
-        const query = {_id: id};
+        if (!ObjectId.isValid(id)) {
+            throw "invalid todo id";
+        }
+
+        const objectID = ObjectId(id);
+        const query = { _id: objectID };
 
         const result = await this.todos.deleteOne(query);
         return result;
