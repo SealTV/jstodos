@@ -48,15 +48,17 @@ function close() {
 
     server.close(() => {
         console.log('Http server closed.');
-    });
 
-    mongoClient.close()
-        .then(() => {
-            console.log(`close MongoDB connection successfully`);
-        })
-        .catch(err => {
-            console.log(`error on close MongoDB connection: ${JSON.stringify(err)}`);
-        });
+        mongoClient.close()
+            .then(() => {
+                console.log(`close MongoDB connection successfully`);
+
+                process.exit(0);
+            })
+            .catch(err => {
+                console.log(`error on close MongoDB connection: ${JSON.stringify(err)}`);
+            });
+    });
 }
 
 function get_db_connection() {

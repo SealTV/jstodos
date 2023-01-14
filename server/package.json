@@ -6,7 +6,7 @@
   "scripts": {
     "serve": "node ./src/index.js",
     "dev": "supervisor ./src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "type": "module",
   "repository": {
@@ -23,6 +23,10 @@
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "mongodb": "^4.13.0",
+    "supervisor": "^0.12.0"
+  },
+  "devDependencies": {
+    "mocha": "^10.2.0",
     "supervisor": "^0.12.0"
   }
 }
