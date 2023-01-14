@@ -1,6 +1,6 @@
 'use strict';
 
-import { MongoClient, Db, ObjectId } from "mongodb";
+import { Db, MongoClient, ObjectId } from "mongodb";
 
 /**
  * 
