@@ -1,10 +1,19 @@
 'use strict';
 
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import express, { json, urlencoded } from 'express';
 import cors from 'cors';
+import compression from 'compression';
+import rid from 'connect-rid';
+import morgan from 'morgan';
+import timeout from 'connect-timeout';
+import {rateLimiterMiddleware} from './middleware/rateLimitter.js';
+
 import { MongoClient } from "mongodb";
 
-import { Server } from "./router/server.js";
+import { Server } from "./router/router.js";
 import { TodosRepo, UserRepo } from "./repository/repo.js";
 import { UserApp } from './app/user.js';
 
@@ -13,7 +22,7 @@ const mongoClient = get_db_connection();
 const tRepo = new TodosRepo(mongoClient.db('todos'));
 const uRepo = new UserRepo(mongoClient.db('users'));
 
-const server = setup_http_server(tRepo, new UserApp(UserRepo));
+const server = setup_http_server(tRepo, new UserApp(uRepo));
 
 process.on('SIGTERM', () => {
     console.info('SIGTERM signal received.');
@@ -36,12 +45,17 @@ function setup_http_server(todosRepo, userApp) {
     const port = 3000;
 
     let app = express();
-    app.use(cors())
-    app.use(json()) // for parsing application/json
-    app.use(urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
+    app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
+    app.use(timeout('5s'));
+    app.use(cors());
+    app.use(compression());
+    app.use(rateLimiterMiddleware);
+    app.use(json()); // for parsing application/json
+    app.use(urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+    app.use(rid({haederName: 'requestID'}));
 
     const srv = new Server(todosRepo, userApp);
-    app.use('/v1', srv.getRouter());
+    app.use('/', srv.getRouter());
 
     let server = app.listen(port, () => {
         console.log(`Server running at http://${hostname}:${port}/`);

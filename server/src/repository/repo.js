@@ -1,4 +1,4 @@
 'use strict';
 
-export { UserRepo } from "./userrepo";
-export { TodosRepo } from "./todosrepo";
+export { UserRepo } from "./userrepo.js";
+export { TodosRepo } from "./todosrepo.js";

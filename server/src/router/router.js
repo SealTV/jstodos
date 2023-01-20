@@ -1,8 +1,10 @@
 'use strict';
 
 import { Router } from 'express';
-import { TodosRepo } from './../repository/repo.js';
-import {UserApp} from './../app/user.js';
+import { TodosRepo } from '../repository/repo.js';
+import { UserApp } from '../app/user.js';
+
+import * as jwt from './jwt.js';
 
 export class Server {
     /**
@@ -13,6 +15,7 @@ export class Server {
     constructor(todosRepo, userApp) {
         this.repo = todosRepo;
         this.userApp = userApp;
+        jwt.generateToken(123, 'hellol');
     }
 
     /**
@@ -21,49 +24,56 @@ export class Server {
      */
     getRouter() {
         const r = Router();
-
-        r.use('/user', this.user());
-        r.use('/todo', this.todoRouter());
+        
+        r.use('/api/v1/user', this.user());
+        r.use('/api/v1/todos', this.todos());
 
         return r;
     }
 
+    /**
+     * @returns {Router}
+     * @author @SealTV
+     */
     user() {
-        const r = Router();
+        let router = Router();
 
-        r.post('/signup', (req, res) => {
-            res.status(500).jsonp({error: 'not implemented'});
+        // router.route("/user")
+        router.post('/signup', (req, res) => {
+            res.status(500).jsonp({ error: 'not implemented' });
+        });
+        
+        router.post('/login', (req, res) => {
+            res.status(500).jsonp({ error: 'not implemented' });
         });
 
-        r.get('/login', (req, res) => {
-            res.status(500).jsonp({error: 'not implemented'});
+        router.post('/refresh', (req, res) => {
+            res.status(500).jsonp({ error: 'not implemented' });
         });
 
-
-        r.get('/refresh', (req, res) => {
-            res.status(500).jsonp({error: 'not implemented'});
-        });
-
-
-        return r;
+        return router;
     }
 
-    todoRouter() {
-        let r = Router();
+    /**
+     * @returns {Router}
+     * @author @SealTV
+     */
+    todos() {
+        let router = Router();
 
-        r.get('/', (req, res) => {
+        router.get('/', (req, res) => {
             this.repo.getTodos()
                 .then(result => {
                     res.status(200).jsonp({ data: result });
                 });
         });
 
-        r.post('/', (req, res) => {
+        router.post('/', (req, res) => {
             let newTodo = req.body;
             newTodo.created_at = Date.now();
             newTodo.done = false;
 
-            this.repo.addTodo(letNewTodo)
+            this.repo.addTodo(newTodo)
                 .then(result => {
                     res.status(202).jsonp({ data: result });
                 })
@@ -72,7 +82,7 @@ export class Server {
                 });
         });
 
-        r.put('/:todoID', (req, res) => {
+        router.put('/:todoID', (req, res) => {
             const todoID = req.params.todoID;
             let todo = req.body;
             todo.updated_at = Date.now();
@@ -86,7 +96,7 @@ export class Server {
                 });
         });
 
-        r.delete('/:todoID', (req, res) => {
+        router.delete('/:todoID', (req, res) => {
             const todoID = req.params.todoID;
 
             this.repo.deleteTodo(todoID)
@@ -98,7 +108,7 @@ export class Server {
                 });
         });
 
-        return r
+        return router;
     }
 }
 
