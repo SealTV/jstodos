@@ -17,6 +17,35 @@ export class Server {
      * @returns {Router}
      */
     getRouter() {
+        const r = Router();
+
+        r.use('/user', this.user());
+        r.use('/todo', this.todoRouter());
+
+        return r;
+    }
+
+    user() {
+        const r = Router();
+
+        r.post('/signup', (req, res) => {
+            res.status(500).jsonp({error: 'not implemented'});
+        });
+
+        r.get('/login', (req, res) => {
+            res.status(500).jsonp({error: 'not implemented'});
+        });
+
+
+        r.get('/refresh', (req, res) => {
+            res.status(500).jsonp({error: 'not implemented'});
+        });
+
+
+        return r;
+    }
+
+    todoRouter() {
         let r = Router();
 
         r.get('/', (req, res) => {

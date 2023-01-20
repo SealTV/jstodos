@@ -14,10 +14,35 @@ function sum(a, b) {
     return a + b
 }
 
-describe('Sum', function() {
-    describe('1 + 1 = 2', function() {
-        it('should return 2 from sum of 1 + 1', function() {
+describe('Sum', function () {
+    describe('1 + 1 = 2', function () {
+        it('should return 2 from sum of 1 + 1', function () {
             assert.equal(sum(1, 1), 2);
+        })
+    })
+})
+
+/**
+ * @param {number[]} nums
+ * @return {boolean}
+ */
+function containsDuplicate(nums) {
+    const s = new Set(nums); return s.size !== nums.length
+};
+
+describe('containsDuplicate', function () {
+    describe('[1,2,3,1] = true', function () {
+        it('should return true', function () {
+            let nums = [1, 2, 3, 1];
+            assert.equal(containsDuplicate(nums), true);
+        })
+    })
+
+
+    describe('[1,2,3,4] = false', function () {
+        it('should return false', function () {
+            let nums = [1, 2, 3, 4];
+            assert.equal(containsDuplicate(nums), false);
         })
     })
 })
