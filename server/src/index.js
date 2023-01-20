@@ -5,13 +5,15 @@ import cors from 'cors';
 import { MongoClient } from "mongodb";
 
 import { Server } from "./router/server.js";
-import { TodosRepo } from "./repository/todosrepo.js";
+import { TodosRepo, UserRepo } from "./repository/repo.js";
+import { UserApp } from './app/user.js';
 
 
 const mongoClient = get_db_connection();
 const tRepo = new TodosRepo(mongoClient.db('todos'));
+const uRepo = new UserRepo(mongoClient.db('users'));
 
-const server = setup_http_server(tRepo);
+const server = setup_http_server(tRepo, new UserApp(UserRepo));
 
 process.on('SIGTERM', () => {
     console.info('SIGTERM signal received.');
@@ -23,8 +25,13 @@ process.on('SIGINT', () => {
     close();
 });
 
-
-function setup_http_server(todosRepo) {
+/**
+ * 
+ * @param {TodosRepo} todosRepo 
+ * @param {UserApp} userApp 
+ * @returns {Server}
+ */
+function setup_http_server(todosRepo, userApp) {
     const hostname = '127.0.0.1';
     const port = 3000;
 
@@ -33,7 +40,7 @@ function setup_http_server(todosRepo) {
     app.use(json()) // for parsing application/json
     app.use(urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
 
-    const srv = new Server(todosRepo);
+    const srv = new Server(todosRepo, userApp);
     app.use('/v1', srv.getRouter());
 
     let server = app.listen(port, () => {

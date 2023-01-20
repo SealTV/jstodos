@@ -1,15 +1,18 @@
 'use strict';
 
 import { Router } from 'express';
-import { TodosRepo } from './../repository/todosrepo.js';
+import { TodosRepo } from './../repository/repo.js';
+import {UserApp} from './../app/user.js';
 
 export class Server {
     /**
      * 
      * @param {TodosRepo} todosRepo 
+     * @param {UserApp} userApp
      */
-    constructor(todosRepo) {
+    constructor(todosRepo, userApp) {
         this.repo = todosRepo;
+        this.userApp = userApp;
     }
 
     /**
