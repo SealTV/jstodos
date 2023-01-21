@@ -13,7 +13,7 @@ import {rateLimiterMiddleware} from './middleware/rateLimitter.js';
 
 import { MongoClient } from "mongodb";
 
-import { Server } from "./router/router.js";
+import { Server } from "./middleware/router/router.js";
 import { TodosRepo, UserRepo } from "./repository/repo.js";
 import { UserApp } from './app/user.js';
 
