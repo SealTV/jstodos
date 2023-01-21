@@ -1,8 +1,8 @@
 'use strict';
 
 import { Router } from 'express';
-import { TodosRepo } from '../repository/repo.js';
-import { UserApp } from '../app/user.js';
+import { TodosRepo } from '../../repository/repo.js';
+import { UserApp } from '../../app/user.js';
 
 import * as jwt from './jwt.js';
 
@@ -15,7 +15,7 @@ export class Server {
     constructor(todosRepo, userApp) {
         this.repo = todosRepo;
         this.userApp = userApp;
-        jwt.generateToken(123, 'hellol');
+        console.log(jwt.generateToken(123, 'hello worls'));
     }
 
     /**
