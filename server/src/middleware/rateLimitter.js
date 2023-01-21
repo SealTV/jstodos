@@ -1,11 +1,15 @@
 'use strict';
 
+import dotenv from 'dotenv'
+dotenv.config();
+
 import redis from 'redis';
 import { RateLimiterRedis } from 'rate-limiter-flexible';
 
+
 const redisClient = redis.createClient({
-    host: 'redis',
-    port: 6379,
+    host: process.env.REDIS_HOST,
+    port: process.env.RESIS_PORT,
     enable_offline_queue: false,
 });
 
