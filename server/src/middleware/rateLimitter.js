@@ -20,7 +20,7 @@ const rateLimiter = new RateLimiterRedis({
     duration: 1, // per 1 second by IP
 });
 
-export function rateLimiterMiddleware (req, res, next)  {
+export function rateLimiterMiddleware(req, res, next) {
     rateLimiter.consume(req.ip)
         .then(() => {
             next();

@@ -10,10 +10,11 @@ import rid from 'connect-rid';
 import morgan from 'morgan';
 import timeout from 'connect-timeout';
 import {rateLimiterMiddleware} from './middleware/rateLimitter.js';
+import {auth} from './middleware/jwt.js';
 
 import { MongoClient } from "mongodb";
 
-import { Server } from "./middleware/router/router.js";
+import { Server } from "./router/router.js";
 import { TodosRepo, UserRepo } from "./repository/repo.js";
 import { UserApp } from './app/user.js';
 
@@ -49,10 +50,11 @@ function setup_http_server(todosRepo, userApp) {
     app.use(timeout('5s'));
     app.use(cors());
     app.use(compression());
-    app.use(rateLimiterMiddleware);
+    // app.use(rateLimiterMiddleware);
     app.use(json()); // for parsing application/json
     app.use(urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
     app.use(rid({haederName: 'requestID'}));
+    app.use(auth);
 
     const srv = new Server(todosRepo, userApp);
     app.use('/', srv.getRouter());
@@ -83,6 +85,7 @@ function close() {
 }
 
 function get_db_connection() {
+
     const url = `mongodb://root:1234@localhost:27017/todos`;
     const mongoClient = new MongoClient(url);
     return mongoClient;
