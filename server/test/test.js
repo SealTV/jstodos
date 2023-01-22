@@ -46,3 +46,16 @@ describe('containsDuplicate', function () {
         })
     })
 })
+
+
+describe('destruction', function () {
+    let user = {
+        name: "John",
+        years: 30
+    };
+
+    let { name, years: age, isAdmin = false } = user;
+    it ('should be equal to "John"', ()=> assert.equal(name, "John"));
+    it ('should be equal to 30', ()=> assert.equal(age, 30));
+    it ('should be equal to FALSE', ()=> assert.equal(isAdmin, false));
+})

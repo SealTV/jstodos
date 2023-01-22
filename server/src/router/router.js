@@ -1,10 +1,10 @@
 'use strict';
 
 import { Router } from 'express';
-import { TodosRepo } from '../../repository/repo.js';
-import { UserApp } from '../../app/user.js';
+import { TodosRepo } from '../repository/repo.js';
+import { UserApp } from '../app/user.js';
 
-import * as jwt from './jwt.js';
+import * as jwt from '../middleware/jwt.js';
 
 export class Server {
     /**
