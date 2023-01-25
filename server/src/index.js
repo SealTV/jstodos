@@ -10,7 +10,6 @@ import rid from 'connect-rid';
 import morgan from 'morgan';
 import timeout from 'connect-timeout';
 import {rateLimiterMiddleware} from './middleware/rateLimitter.js';
-import {auth} from './middleware/jwt.js';
 
 import { MongoClient } from "mongodb";
 
@@ -20,8 +19,9 @@ import { UserApp } from './app/user.js';
 
 
 const mongoClient = get_db_connection();
-const tRepo = new TodosRepo(mongoClient.db('todos'));
-const uRepo = new UserRepo(mongoClient.db('users'));
+const db = mongoClient.db('todos')
+const tRepo = new TodosRepo(db);
+const uRepo = new UserRepo(db);
 
 const server = setup_http_server(tRepo, new UserApp(uRepo));
 
@@ -56,7 +56,6 @@ function setup_http_server(todosRepo, userApp) {
     app.use(rid({haederName: 'requestID'}));
 
     const srv = new Server(todosRepo, userApp);
-    app.use(auth(srv.claimsVerify));
     app.use('/', srv.getRouter());
 
     let server = app.listen(port, () => {
@@ -85,7 +84,6 @@ function close() {
 }
 
 function get_db_connection() {
-
     const url = `mongodb://root:1234@localhost:27017/todos`;
     const mongoClient = new MongoClient(url);
     return mongoClient;

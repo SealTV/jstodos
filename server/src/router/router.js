@@ -15,11 +15,6 @@ export class Server {
     constructor(todosRepo, userApp) {
         this.repo = todosRepo;
         this.userApp = userApp;
-        console.log(jwt.generateToken({
-            userID: 123,
-            username: 'hello world',
-            isAdmin: false,
-        }));
     }
 
     claimsVerify(claims) {
@@ -42,8 +37,10 @@ export class Server {
 
     v1() {
         const r = Router();
- 
+
         r.use('/user', this.user());
+
+        r.use(jwt.auth(this.claimsVerify));
         r.use('/todos', this.todos());
 
         return r;
@@ -57,7 +54,25 @@ export class Server {
         let router = Router();
 
         router.post('/signup', (req, res) => {
-            res.status(500).jsonp({ error: 'not implemented' });
+            const login = req.body.login;
+            if (!login) {
+                res.status(400).jsonp({ error: "empty login" });
+                return;
+            }
+
+            const password = req.body.password;
+            if (!password) {
+                res.status(400).jsonp({ error: "empty password" });
+                return;
+            }
+
+            this.userApp.register(login, password)
+                .then(result => {
+                    res.sendStatus(201);
+                })
+                .catch(err => {
+                    res.status(500).jsonp({ err: err });
+                })
         });
 
         router.post('/login', (req, res) => {
