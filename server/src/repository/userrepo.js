@@ -11,11 +11,12 @@ export class UserRepo {
      */
     constructor(db) {
         this.database = db;
-        this.users = this.database.collection('users');
+        this.userColl = this.database.collection('users');
     }
 
     async saveUser(user) {
-        throw Error('not implemented');
+        const result = await this.userColl.insertOne(user);
+        return result;
     }
 
     async getUserByLogin(user) {
