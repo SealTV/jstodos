@@ -15,7 +15,17 @@ export class Server {
     constructor(todosRepo, userApp) {
         this.repo = todosRepo;
         this.userApp = userApp;
-        console.log(jwt.generateToken(123, 'hello worls'));
+        console.log(jwt.generateToken({
+            userID: 123,
+            username: 'hello world',
+            isAdmin: false,
+        }));
+    }
+
+    claimsVerify(claims) {
+        if (!claims.isAdmin) {
+            return "user is not admin"
+        }
     }
 
     /**
@@ -24,9 +34,17 @@ export class Server {
      */
     getRouter() {
         const r = Router();
-        
-        r.use('/api/v1/user', this.user());
-        r.use('/api/v1/todos', this.todos());
+
+        r.use('/api/v1/', this.v1());
+
+        return r;
+    }
+
+    v1() {
+        const r = Router();
+ 
+        r.use('/user', this.user());
+        r.use('/todos', this.todos());
 
         return r;
     }
@@ -38,11 +56,10 @@ export class Server {
     user() {
         let router = Router();
 
-        // router.route("/user")
         router.post('/signup', (req, res) => {
             res.status(500).jsonp({ error: 'not implemented' });
         });
-        
+
         router.post('/login', (req, res) => {
             res.status(500).jsonp({ error: 'not implemented' });
         });

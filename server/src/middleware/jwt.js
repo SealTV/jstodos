@@ -7,7 +7,7 @@ import crypto from 'crypto';
 
 const secret = process.env.SECRET_KEY;
 
-export function generateToken(userID, username) {
+export function generateToken(claims) {
     let header = Buffer.from(JSON.stringify({
         alg: "HS256",
         typ: "jwt",
@@ -16,85 +16,107 @@ export function generateToken(userID, username) {
 
     const now = Math.floor(Date.now() / 1000);
 
-    let body = Buffer.from(JSON.stringify({
-        iss: "jstods",
+
+    let data = {
+        iss: "jstodos.site",
         sub: "auth",
-        aud: [],
+        aud: ["service client"],
         exp: now + 3600,
         nbf: now,
         iat: now,
-        userID: userID,
-        username: username,
-    })).toString('base64').replace(/={1,2}$/, '');
+    };
+
+    for (let key in claims) {
+        data[key] = claims[key];
+    }
+
+    let payload = Buffer.from(JSON.stringify(data)).toString('base64').replace(/={1,2}$/, '');
 
     let signature = crypto
         .createHmac('sha256', secret)
-        .update(`${header}.${body}`)
+        .update(`${header}.${payload}`)
         .digest()
         .toString('base64').replace(/={1,2}$/, '');
 
-    return `${header}.${body}.${signature}`;
+    return `${header}.${payload}.${signature}`;
 }
 
-/**
- * 
- * @param {*} req 
- * @param {*} res 
- * @param {*} next 
- */
-export function auth(req, res, next) {
-    if (!req.headers.authorization) {
-        res.status(401).jsonp({
-            error: "required Authorization hreader",
-        });
+export function auth(valiadtionFunc) {
+    return function (req, res, next) {
+        if (!req.headers.authorization) {
+            res.status(401).jsonp({
+                error: "required Authorization hreader",
+            });
 
-        return;
+            return;
+        }
+
+        let [bearer, token] = req.headers.authorization?.split(' ');
+        if (bearer !== 'Bearer' || !token) {
+            res.status(401).jsonp({
+                error: "invalid header value"
+            });
+
+            return;
+        }
+
+        let tokenParts = token.split('.');
+        if (tokenParts.length != 3) {
+            res.status(401).jsonp({
+                error: "invalid tokent format"
+            });
+
+            return;
+        }
+
+        let [header, body, signature] = tokenParts;
+        let currentSignature = crypto
+            .createHmac('sha256', secret)
+            .update(`${header}.${body}`)
+            .digest()
+            .toString('base64').replace(/={1,2}$/, '')
+        if (currentSignature !== signature) {
+            res.status(401).jsonp({
+                error: "invalid token signature",
+            });
+            return;
+        }
+
+        let claims = JSON.parse(Buffer.from(body, 'base64').toString('utf-8'));
+
+        let err = validateTokenClaims(valiadtionFunc, claims);
+        if (err) {
+            res.status(401).jsonp({
+                error: err,
+            });
+            return;
+        }
+
+        next();
     }
-
-    let [bearer, token] = req.headers.authorization?.split(' ');
-    if (bearer !== 'Bearer' || !token) {
-        res.status(401).jsonp({
-            error: "invalid header value"
-        });
-
-        return;
-    }
-
-    let tokenParts = token.split('.');
-    if (tokenParts.length != 3) {
-        res.status(401).jsonp({
-            error: "invalid tokent format"
-        });
-
-        return;
-    }
-    
-    let [header, body, signature] = tokenParts;
-    let currentSignature = crypto
-        .createHmac('sha256', secret)
-        .update(`${header}.${body}`)
-        .digest()
-        .toString('base64').replace(/={1,2}$/, '')
-    if (currentSignature !== signature) {
-        res.status(401).jsonp({
-            error: "invalid token singature",
-        });
-        return;
-    }
-
-    let claims = JSON.parse(Buffer.from(body, 'base64').toString('utf-8'));
-
-    if (!validateTokenClaims(req, res, claims)) { 
-       return;
-    }
-
-    next();
 }
 
-function validateTokenClaims(req, res, claims) {
-    return true;
-}
+function validateTokenClaims(validationFunc, claims) {
+    const now = Math.floor(Date.now() / 1000);
 
-export function verify(token) {
-    throw Error('not implemented');
+    if (now > claims.exp) {
+        return "token expired";
+    }
+
+    if (now < claims.iat) {
+        return "invalid time of token issue";
+
+    }
+
+    if (now < claims.nbf) {
+        return "token is not active";
+    }
+
+
+    let err = validationFunc(claims);
+    if (err) {
+        return err;
+    }
+
+    return null;
 }

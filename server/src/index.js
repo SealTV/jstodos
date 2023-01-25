@@ -54,9 +54,9 @@ function setup_http_server(todosRepo, userApp) {
     app.use(json()); // for parsing application/json
     app.use(urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
     app.use(rid({haederName: 'requestID'}));
-    app.use(auth);
 
     const srv = new Server(todosRepo, userApp);
+    app.use(auth(srv.claimsVerify));
     app.use('/', srv.getRouter());
 
     let server = app.listen(port, () => {
