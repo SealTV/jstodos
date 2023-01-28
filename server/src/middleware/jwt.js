@@ -45,7 +45,7 @@ export function auth(valiadtionFunc) {
     return function (req, res, next) {
         if (!req.headers.authorization) {
             res.status(401).jsonp({
-                error: "required Authorization hreader",
+                error: "required Authorization header",
             });
 
             return;

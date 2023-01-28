@@ -19,7 +19,9 @@ export class UserRepo {
         return result;
     }
 
-    async getUserByLogin(user) {
-        throw Error('not implemented');
+    async getUserByLogin(login) {
+        const query = { login : login };
+        const result = await this.userColl.findOne(query);
+        return result;
     }
 }
