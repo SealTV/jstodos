@@ -18,9 +18,8 @@ export class Server {
     }
 
     claimsVerify(claims) {
-        if (!claims.isAdmin) {
-            return "user is not admin"
-        }
+        //TODO: Add claim validation
+        return null;
     }
 
     /**
@@ -71,12 +70,51 @@ export class Server {
                     res.sendStatus(201);
                 })
                 .catch(err => {
+                    console.error(`error on try register user: ${err}`);
                     res.status(500).jsonp({ err: err });
                 })
         });
 
-        router.post('/login', (req, res) => {
-            res.status(500).jsonp({ error: 'not implemented' });
+        router.post('/login', async (req, res) => {
+            const login = req.body.login;
+            if (!login) {
+                res.status(400).jsonp({ error: "empty login" });
+                return;
+            }
+
+            const password = req.body.password;
+            if (!password) {
+                res.status(400).jsonp({ error: "empty password" });
+                return;
+            }
+
+            try {
+                const result = await this.userApp.login(login, password);
+
+                const token = jwt.generateToken({
+                    id: result.id,
+                    login: result.login,
+                })
+
+                res.status(200).jsonp({
+                    ok: {
+                        token: token,
+                    }
+                });
+            } catch (err) {
+                console.error(`error on try login user: ${err}`);
+                switch (err.message) {
+                    case "User not found":
+                        res.status(404).jsonp({ error: "User not found" });
+                        break;
+                    case "Invalid password":
+                        res.status(404).jsonp({ error: "Invalid password" });
+                        break;
+                    default:
+                        res.status(500).jsonp({ error: err });
+                        break;
+                }
+            }
         });
 
         router.post('/refresh', (req, res) => {

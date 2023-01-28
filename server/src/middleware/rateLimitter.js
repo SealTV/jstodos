@@ -6,12 +6,14 @@ dotenv.config();
 import redis from 'redis';
 import { RateLimiterRedis } from 'rate-limiter-flexible';
 
-
+const url = `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`;
 const redisClient = redis.createClient({
-    host: process.env.REDIS_HOST,
-    port: process.env.RESIS_PORT,
-    enable_offline_queue: false,
+    url: url,
 });
+
+redisClient.on('error', err => console.log('Redis Client Error', err));
+await redisClient.connect();
+await redisClient.PING();
 
 const rateLimiter = new RateLimiterRedis({
     storeClient: redisClient,
@@ -21,7 +23,8 @@ const rateLimiter = new RateLimiterRedis({
 });
 
 export function rateLimiterMiddleware(req, res, next) {
-    rateLimiter.consume(req.ip)
+    console.log(`req.ip ${req.ip}`);
+    rateLimiter.consume(req.ip, 2)
         .then(() => {
             next();
         })

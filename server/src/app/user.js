@@ -24,11 +24,20 @@ export class UserApp {
     }
 
     async login(login, password) {
-        throw Error('not implemented');
+        const user = await this.userRepo.getUserByLogin(login);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        if (!await verify(password, user.password)) {
+            throw new Error("Invalid password");
+        }
+
+        return user;
     }
 
     async refresh(refreshToken) {
-        throw Error('not implemented');
+        throw new Error('not implemented');
     }
 }
 
