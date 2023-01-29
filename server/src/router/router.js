@@ -1,10 +1,15 @@
 'use strict';
 
+import dotenv from 'dotenv'
+dotenv.config();
+
 import { Router } from 'express';
 import { TodosRepo } from '../repository/repo.js';
 import { UserApp } from '../app/user.js';
 
 import * as jwt from '../middleware/jwt.js';
+
+const secret = process.env.SECRET_KEY;
 
 export class Server {
     /**
@@ -39,7 +44,7 @@ export class Server {
 
         r.use('/user', this.user());
 
-        r.use(jwt.auth(this.claimsVerify));
+        r.use(jwt.auth(secret, this.claimsVerify));
         r.use('/todos', this.todos());
 
         return r;
