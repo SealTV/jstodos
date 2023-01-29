@@ -41,7 +41,7 @@ export function generateToken(claims) {
     return `${header}.${payload}.${signature}`;
 }
 
-export function auth(valiadtionFunc) {
+export function auth(validationFunc) {
     return function (req, res, next) {
         if (!req.headers.authorization) {
             res.status(401).jsonp({
@@ -84,7 +84,7 @@ export function auth(valiadtionFunc) {
 
         let claims = JSON.parse(Buffer.from(body, 'base64').toString('utf-8'));
 
-        let err = validateTokenClaims(valiadtionFunc, claims);
+        let err = validateTokenClaims(validationFunc, claims);
         if (err) {
             res.status(401).jsonp({
                 error: err,
