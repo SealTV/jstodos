@@ -19,9 +19,16 @@ export class UserRepo {
         return result;
     }
 
-    async getUserByLogin(login) {
-        const query = { login : login };
+    async getUserByID(userID) {
+        const query = { id: userID };
         const result = await this.userColl.findOne(query);
         return result;
     }
+
+    async getUserByLogin(login) {
+        const query = { login: login };
+        const result = await this.userColl.findOne(query);
+        return result;
+    }
+
 }

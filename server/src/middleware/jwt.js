@@ -2,7 +2,7 @@
 
 import crypto from 'crypto';
 
-export function getTokenGenerator(secret) {
+export function getTokenGenerator(secret, duration = 3600) {
     return function (claims) {
         let header = Buffer.from(JSON.stringify({
             alg: "HS256",
@@ -17,7 +17,7 @@ export function getTokenGenerator(secret) {
             iss: "jstodos.site",
             sub: "auth",
             aud: ["service client"],
-            exp: now + 3600,
+            exp: now + duration,
             nbf: now,
             iat: now,
         };
@@ -58,40 +58,45 @@ export function auth(secret, validationFunc) {
             return;
         }
 
-        let tokenParts = token.split('.');
-        if (tokenParts.length != 3) {
+        try {
+            const claims = validateTokenAndGetClaims(secret, token, validationFunc);
+            req.claims = claims;
+        } catch (err) {
             res.status(401).jsonp({
-                error: "invalid tokent format"
+                error: err
             });
 
-            return;
-        }
-
-        let [header, body, signature] = tokenParts;
-        let currentSignature = crypto
-            .createHmac('sha256', secret)
-            .update(`${header}.${body}`)
-            .digest()
-            .toString('base64').replace(/={1,2}$/, '')
-        if (currentSignature !== signature) {
-            res.status(401).jsonp({
-                error: "invalid token signature",
-            });
-            return;
-        }
-
-        let claims = JSON.parse(Buffer.from(body, 'base64').toString('utf-8'));
-
-        let err = validateTokenClaims(validationFunc, claims);
-        if (err) {
-            res.status(401).jsonp({
-                error: err,
-            });
             return;
         }
 
         next();
     }
+}
+
+export function validateTokenAndGetClaims(secret, token, validationFunc) {
+    let tokenParts = token.split('.');
+    if (tokenParts.length != 3) {
+        throw new Error("invalid token format");
+    }
+
+    let [header, body, signature] = tokenParts;
+    let currentSignature = crypto
+        .createHmac('sha256', secret)
+        .update(`${header}.${body}`)
+        .digest()
+        .toString('base64').replace(/={1,2}$/, '')
+    if (currentSignature !== signature) {
+        throw new Error("invalid token signature");
+    }
+
+    let claims = JSON.parse(Buffer.from(body, 'base64').toString('utf-8'));
+
+    let err = validateTokenClaims(validationFunc, claims);
+    if (err) {
+        throw err;
+    }
+
+    return claims;
 }
 
 function validateTokenClaims(validationFunc, claims) {

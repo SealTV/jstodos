@@ -36,8 +36,13 @@ export class UserApp {
         return user;
     }
 
-    async refresh(refreshToken) {
-        throw new Error('not implemented');
+    async findUserByID(userID) {
+        const user = await this.userRepo.getUserByID(userID);
+        if (!user) {
+            throw new Error("User not found");
+        }
+        
+        return user;
     }
 }
 

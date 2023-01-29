@@ -4,22 +4,28 @@ import dotenv from 'dotenv'
 dotenv.config();
 
 import { Router } from 'express';
-import { TodosRepo } from '../repository/repo.js';
+import { TodosRepo, TokensRepo } from '../repository/repo.js';
 import { UserApp } from '../app/user.js';
 
 import * as jwt from '../middleware/jwt.js';
 
-const secret = process.env.SECRET_KEY;
+const accessTokenSecret = process.env.ACCESS_TOKEN_SECRET;
+const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
+
+const refreshTokenLifeTime = 3600 * 24 * 7;
 
 export class Server {
     /**
      * 
      * @param {TodosRepo} todosRepo 
      * @param {UserApp} userApp
+     * @param {TokensRepo} tokensRepo
      */
-    constructor(todosRepo, userApp) {
+    constructor(todosRepo, userApp, tokensRepo) {
         this.repo = todosRepo;
         this.userApp = userApp;
+
+        this.tokensRepo = tokensRepo;
     }
 
     claimsVerify(claims) {
@@ -44,7 +50,7 @@ export class Server {
 
         r.use('/user', this.user());
 
-        r.use(jwt.auth(secret, this.claimsVerify));
+        r.use(jwt.auth(accessTokenSecret, this.claimsVerify));
         r.use('/todos', this.todos());
 
         return r;
@@ -56,6 +62,12 @@ export class Server {
      */
     user() {
         let router = Router();
+
+        // access token is active 1 hour
+        const generateAccessToken = jwt.getTokenGenerator(accessTokenSecret);
+
+        // refresh token is active 7 days
+        const generateRefreshToken = jwt.getTokenGenerator(refreshTokenSecret, refreshTokenLifeTime);
 
         router.post('/signup', (req, res) => {
             const login = req.body.login;
@@ -96,14 +108,24 @@ export class Server {
             try {
                 const result = await this.userApp.login(login, password);
 
-                const token = jwt.generateToken({
-                    id: result.id,
+                const accessToken = generateAccessToken({
+                    userID: result.id,
                     login: result.login,
-                })
+                    aud: ["login"],
+                });
+
+                const refreshToken = generateRefreshToken({
+                    userID: result.id,
+                    aud: ["refresh_token"],
+                });
+
+                await this.tokensRepo.storeToken(refreshToken, refreshTokenLifeTime);
+
 
                 res.status(200).jsonp({
                     ok: {
-                        token: token,
+                        accessToken: accessToken,
+                        refreshToken: refreshToken,
                     }
                 });
             } catch (err) {
@@ -122,8 +144,81 @@ export class Server {
             }
         });
 
-        router.post('/refresh', (req, res) => {
-            res.status(500).jsonp({ error: 'not implemented' });
+        router.post('/refresh', async (req, res) => {
+            const refreshToken = req.body.refreshToken;
+            if (!refreshToken) {
+                res.status(400).jsonp({ error: "empty refresh token" });
+                return;
+            }
+
+            let claims = null
+
+            try {
+                claims = jwt.validateTokenAndGetClaims(refreshTokenSecret, refreshToken, () => { return null; });
+                if (!claims || !claims.userID) {
+                    res.status(400).jsonp({ error: "user id not found in refresh token" });
+                    return;
+                }
+            } catch (err) {
+                console.error(`error on validate refresh token: ${JSON.stringify(err)}`);
+                res.status(401).jsonp({
+                    error: err
+                });
+
+                return;
+            }
+
+            try {
+                const ok = await this.tokensRepo.checkTokenExist(refreshToken);
+                if (!ok) {
+                    res.status(401).jsonp({
+                        error: "refresh token invalid",
+                    });
+                    return;
+                }
+
+                await this.tokensRepo.deleteToken(refreshToken, refreshTokenLifeTime);
+
+            } catch (err) {
+                console.error(`error on check if refresh token exist: ${JSON.stringify(err, 2)}`);
+                res.status(500).jsonp({
+                    error: `Internal server error`,
+                });
+            }
+
+            try {
+                const result = this.userApp.findUserByID(claims.userID);
+
+                const accessToken = generateAccessToken({
+                    userID: result.id,
+                    login: result.login,
+                    aud: ["login"],
+                });
+
+                const newRefreshToken = generateRefreshToken({
+                    userID: result.id,
+                    aud: ["refresh_token"],
+                });
+
+                await this.tokensRepo.storeToken(newRefreshToken, refreshTokenLifeTime);
+
+                res.status(200).jsonp({
+                    ok: {
+                        accessToken: accessToken,
+                        refreshToken: newRefreshToken,
+                    }
+                });
+            } catch (err) {
+                console.error(`error on try login user: ${err}`);
+                switch (err.message) {
+                    case "User not found":
+                        res.status(404).jsonp({ error: "User not found" });
+                        break;
+                    default:
+                        res.status(500).jsonp({ error: err });
+                        break;
+                }
+            }
         });
 
         return router;
