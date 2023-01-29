@@ -1,47 +1,45 @@
 'use strict';
 
-import dotenv from 'dotenv'
-dotenv.config();
-
 import crypto from 'crypto';
 
-const secret = process.env.SECRET_KEY;
+export function getTokenGenerator(secret) {
+    return function (claims) {
+        let header = Buffer.from(JSON.stringify({
+            alg: "HS256",
+            typ: "jwt",
+            ctp: "jwt",
+        })).toString('base64').replace(/={1,2}$/, '');
 
-export function generateToken(claims) {
-    let header = Buffer.from(JSON.stringify({
-        alg: "HS256",
-        typ: "jwt",
-        ctp: "jwt",
-    })).toString('base64').replace(/={1,2}$/, '');
-
-    const now = Math.floor(Date.now() / 1000);
+        const now = Math.floor(Date.now() / 1000);
 
 
-    let data = {
-        iss: "jstodos.site",
-        sub: "auth",
-        aud: ["service client"],
-        exp: now + 3600,
-        nbf: now,
-        iat: now,
-    };
+        let data = {
+            iss: "jstodos.site",
+            sub: "auth",
+            aud: ["service client"],
+            exp: now + 3600,
+            nbf: now,
+            iat: now,
+        };
 
-    for (let key in claims) {
-        data[key] = claims[key];
+        for (let key in claims) {
+            data[key] = claims[key];
+        }
+
+        let payload = Buffer.from(JSON.stringify(data)).toString('base64').replace(/={1,2}$/, '');
+
+        let signature = crypto
+            .createHmac('sha256', secret)
+            .update(`${header}.${payload}`)
+            .digest()
+            .toString('base64').replace(/={1,2}$/, '');
+
+        return `${header}.${payload}.${signature}`;
     }
-
-    let payload = Buffer.from(JSON.stringify(data)).toString('base64').replace(/={1,2}$/, '');
-
-    let signature = crypto
-        .createHmac('sha256', secret)
-        .update(`${header}.${payload}`)
-        .digest()
-        .toString('base64').replace(/={1,2}$/, '');
-
-    return `${header}.${payload}.${signature}`;
 }
 
-export function auth(validationFunc) {
+
+export function auth(secret, validationFunc) {
     return function (req, res, next) {
         if (!req.headers.authorization) {
             res.status(401).jsonp({
