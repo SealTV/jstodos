@@ -1,0 +1,39 @@
+version: "3.9"
+
+networks:
+  todosnet:
+
+services:
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=1234
+      - MONGO_INITDB_DATABASE=todos
+    ports:
+      - 27017:27017
+
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - 6379:6379
+
+  todos:
+    build: .
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8080
+      - ACCESS_TOKEN_SECRET=access_token_secret
+      - REFRESH_TOKEN_SECRET=refresh_token_secret
+      - REDIS_HOST=redis
+      - MONGO_HOST=mongo
+      - MONGO_USER=root
+      - MONGO_PASSWORD=1234
+      - MONGO_DB_NAME=todos
+    ports:
+      - 8080:8080
+    depends_on:
+      - mongo
+      - redis
