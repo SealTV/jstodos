@@ -49,8 +49,8 @@ process.on('SIGINT', () => {
  * @returns {Server}
  */
 function setup_http_server(todosRepo, userApp, tokensRepo) {
-    const hostname = '127.0.0.1';
-    const port = 3000;
+    const hostname = process.env.HOST;
+    const port = process.env.PORT;
 
     let app = express();
     app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
