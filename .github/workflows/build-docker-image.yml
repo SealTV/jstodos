@@ -10,13 +10,9 @@ on:
     branches:
       - main
       - "releases/**"
-      - "*"
+      - "**"
 
   pull_request:
-    branches:
-      - main
-      - "releases/**"
-      - "*"
     types: [opened, reopened]
 
 jobs:
