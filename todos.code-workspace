@@ -2,13 +2,8 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"path": "../client"
-		},
-		{
-			"path": "../.github"
 		}
+		
 	],
 	"settings": {
 		"cSpell.words": [
