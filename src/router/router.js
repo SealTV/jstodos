@@ -17,9 +17,8 @@ export class Server {
      * @param {TokensRepo} tokensRepo
      */
     constructor(todosRepo, userApp, tokensRepo) {
-        this.repo = todosRepo;
-        this.userApp = userApp;
-        this.tokensRepo = tokensRepo;
+        this.user = new UserRouter(userApp, tokensRepo);
+        this.todos = new TodosRouter(todosRepo);
     }
 
     /**
@@ -37,13 +36,10 @@ export class Server {
     v1() {
         const r = Router();
 
-        const user = new UserRouter(this.userApp, this.tokensRepo);
-        r.use('/user', user.getRouter());
+        r.use('/user', this.user.getRouter());
 
-        r.use(user.getAuthMiddleware());
-
-        const todos = new TodosRouter(this.repo);
-        r.use('/todos', todos.getRouter());
+        r.use(this.user.getAuthMiddleware());
+        r.use('/todos', this.todos.getRouter());
 
         return r;
     }

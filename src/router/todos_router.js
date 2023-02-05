@@ -22,59 +22,58 @@ export class TodosRouter {
     getRouter() {
         let router = Router();
 
-        router.get('/', this.getTodos);
-        router.post('/', this.addTodo);
-        router.put('/:todoID', this.updateTodo);
-        router.delete('/:todoID', this.deleteTodo);
+        router.get('/', async (req, res) => await this.getTodos(req, res));
+        router.post('/', async (req, res) => await this.addTodo(req, res));
+        router.put('/:todoID', async (req, res) => await this.updateTodo(req, res));
+        router.delete('/:todoID', async (req, res) => await this.deleteTodo(req, res));
 
         return router;
     }
 
-    getTodos(req, res) {
-        this.repo.getTodos()
-            .then(result => {
-                res.status(200).jsonp({ data: result });
-            });
+    async getTodos(req, res) {
+        try {
+            let result = await this.repo.getTodos(req.userID);
+            res.status(200).jsonp({ data: result });
+        } catch (error) {
+            res.status(500).jsonp({ error: err });
+        }
     }
 
-    addTodo(req, res) {
+    async addTodo(req, res) {
         let newTodo = req.body;
         newTodo.created_at = Date.now();
         newTodo.done = false;
 
-        this.repo.addTodo(newTodo)
-            .then(result => {
-                res.status(202).jsonp({ data: result });
-            })
-            .catch(err => {
-                res.status(500).jsonp({ error: err });
-            });
+        try {
+            let result = await this.repo.addTodo(req.userID, newTodo);
+            res.status(202).jsonp({ data: result });
+        } catch (err) {
+            res.status(500).jsonp({ error: err });
+        }
     }
 
-    updateTodo(req, res) {
+    async updateTodo(req, res) {
         const todoID = req.params.todoID;
         let todo = req.body;
         todo.updated_at = Date.now();
 
-        this.repo.updateTodo(todoID, todo)
-            .then(result => {
-                res.status(202).jsonp({ data: result });
-            })
-            .catch(err => {
-                res.status(500).jsonp({ error: err });
-            });
+        try {
+            let result = await this.repo.updateTodo(req.userID, todoID, todo);
+            res.status(202).jsonp({ data: result });
+        } catch (err) {
+            res.status(500).jsonp({ error: err });
+        }
     }
 
-    deleteTodo(req, res) {
+    async deleteTodo(req, res) {
         const todoID = req.params.todoID;
 
-        this.repo.deleteTodo(todoID)
-            .then(result => {
-                res.status(202).jsonp({ data: result });
-            })
-            .catch(err => {
-                res.status(500).jsonp({ error: err });
-            });
+        try {
+            let result = await this.repo.deleteTodo(req.userID, todoID);
+            res.status(202).jsonp({ data: result });
+        } catch (err) {
+            res.status(500).jsonp({ error: err });
+        }
     }
 }
 

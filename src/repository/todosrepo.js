@@ -14,25 +14,32 @@ export class TodosRepo {
         this.todos = this.database.collection('todos');
     }
 
-    async getTodos() {
-        const query = {};
+    async getTodos(userID) {
+        const query = {
+            userID: userID,
+        };
         const cursor = await this.todos.find(query);
 
         return await cursor.toArray();
     }
 
-    async addTodo(doc) {
+    async addTodo(userID, doc) {
+        doc.userID = userID;
         const result = await this.todos.insertOne(doc);
         return result;
     }
 
-    async updateTodo(id, doc) {
+    async updateTodo(userID, docID, doc) {
         if (!ObjectId.isValid(id)) {
             return;
         }
 
-        const objectID = ObjectId(id);
-        const filter = { _id: objectID };
+        const objectID = ObjectId(docID);
+        const filter = {
+            _id: objectID,
+            userID: userID
+        };
+
         const options = { upsert: true };
 
         const updateDoc = {
@@ -44,13 +51,16 @@ export class TodosRepo {
     }
 
 
-    async deleteTodo(id) {
+    async deleteTodo(userID, docID) {
         if (!ObjectId.isValid(id)) {
             throw "invalid todo id";
         }
 
-        const objectID = ObjectId(id);
-        const query = { _id: objectID };
+        const objectID = ObjectId(docID);
+        const query = {
+            _id: objectID,
+            userID: userID,
+        };
 
         const result = await this.todos.deleteOne(query);
         return result;
