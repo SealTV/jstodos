@@ -22,19 +22,11 @@ export class UserRouter {
      */
     constructor(userApp, tokensRepo) {
         this.userApp = userApp;
-
         this.tokensRepo = tokensRepo;
-
         // access token is active 1 hour
         this.generateAccessToken = jwt.getTokenGenerator(accessTokenSecret);
         // refresh token is active 7 days
         this.generateRefreshToken = jwt.getTokenGenerator(refreshTokenSecret, refreshTokenLifeTime);
-
-    }
-
-    verifyClaims(claims) {
-        //TODO: Add claim validation
-        return null;
     }
 
     /**
@@ -44,9 +36,9 @@ export class UserRouter {
     getRouter() {
         const router = Router();
 
-        router.post('/signup', this.signup);
-        router.post('/login', this.login);
-        router.post('/refresh', this.refreshToken);
+        router.post('/signup', (req, res) => this.signupHandler(req, res));
+        router.post('/login', async (req, res) => await this.loginHandler(req, res));
+        router.post('/refresh', async (req, res) => await this.refreshTokenHandler(req, res));
 
         return router;
     }
@@ -55,23 +47,22 @@ export class UserRouter {
         return jwt.auth(this.accessTokenSecret, this.verifyClaims);
     }
 
-    /**
-     * @returns {Router}
-     * @author @SealTV
-     */
-    user() {
-        let router = Router();
+    verifyClaims(req, res, claims) {
+        if (!claims.userID) {
+            return new Error("empty user id in token claims");
+        }
 
-        router.post('/signup', this.signup);
+        if (!claims.login) {
+            return new Error("empty user loging in token claims");
+        }
 
-        router.post('/login', this.login);
+        req.userID = claims.userID;
+        req.login = claims.login;
 
-        router.post('/refresh', this.refreshToken);
-
-        return router;
+        return null;
     }
 
-    signup(req, res) {
+    signupHandler(req, res) {
         const login = req.body.login;
         if (!login) {
             res.status(400).jsonp({ error: "empty login" });
@@ -94,7 +85,7 @@ export class UserRouter {
             });
     }
 
-    async login(req, res) {
+    async loginHandler(req, res) {
         const login = req.body.login;
         if (!login) {
             res.status(400).jsonp({ error: "empty login" });
@@ -110,23 +101,12 @@ export class UserRouter {
         try {
             const result = await this.userApp.login(login, password);
 
-            const accessToken = this.generateAccessToken({
-                userID: result.id,
-                login: result.login,
-                aud: ["login"],
-            });
-
-            const refreshToken = this.generateRefreshToken({
-                userID: result.id,
-                aud: ["refresh_token"],
-            });
-
+            const refreshToken = this.getRefreshToken(result);
             await this.tokensRepo.storeToken(refreshToken, refreshTokenLifeTime);
-
 
             res.status(200).jsonp({
                 ok: {
-                    accessToken: accessToken,
+                    accessToken: this.getAccessToken(result),
                     refreshToken: refreshToken,
                 }
             });
@@ -146,7 +126,7 @@ export class UserRouter {
         }
     }
 
-    async refreshToken(req, res) {
+    async refreshTokenHandler(req, res) {
         const refreshToken = req.body.refreshToken;
         if (!refreshToken) {
             res.status(400).jsonp({ error: "empty refresh token" });
@@ -189,24 +169,13 @@ export class UserRouter {
         }
 
         try {
-            const result = this.userApp.findUserByID(claims.userID);
-
-            const accessToken = this.generateAccessToken({
-                userID: result.id,
-                login: result.login,
-                aud: ["login"],
-            });
-
-            const newRefreshToken = this.generateRefreshToken({
-                userID: result.id,
-                aud: ["refresh_token"],
-            });
-
+            const result = await this.userApp.findUserByID(claims.userID);
+            const newRefreshToken = this.getRefreshToken(result);
             await this.tokensRepo.storeToken(newRefreshToken, refreshTokenLifeTime);
 
             res.status(200).jsonp({
                 ok: {
-                    accessToken: accessToken,
+                    accessToken: this.getAccessToken(result),
                     refreshToken: newRefreshToken,
                 }
             });
@@ -221,5 +190,24 @@ export class UserRouter {
                     break;
             }
         }
+    }
+
+    getAccessToken(user) {
+        const accessToken = this.generateAccessToken({
+            userID: user.id,
+            login: user.login,
+            aud: ["login"],
+        });
+
+        return accessToken;
+    }
+
+    getRefreshToken(user) {
+        const refreshToken = this.generateRefreshToken({
+            userID: user.id,
+            aud: ["refresh_token"],
+        });
+
+        return refreshToken;
     }
 }

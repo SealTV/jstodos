@@ -59,8 +59,13 @@ export function auth(secret, validationFunc) {
         }
 
         try {
-            const claims = validateTokenAndGetClaims(secret, token, validationFunc);
+            const claims = validateTokenAndGetClaims(secret, token);
             req.claims = claims;
+
+            let err = validationFunc(req, res, claims);
+            if (err) {
+                throw err;
+            }
         } catch (err) {
             res.status(401).jsonp({
                 error: err
@@ -73,7 +78,7 @@ export function auth(secret, validationFunc) {
     }
 }
 
-export function validateTokenAndGetClaims(secret, token, validationFunc) {
+export function validateTokenAndGetClaims(secret, token) {
     let tokenParts = token.split('.');
     if (tokenParts.length != 3) {
         throw new Error("invalid token format");
@@ -91,7 +96,7 @@ export function validateTokenAndGetClaims(secret, token, validationFunc) {
 
     let claims = JSON.parse(Buffer.from(body, 'base64').toString('utf-8'));
 
-    let err = validateTokenClaims(validationFunc, claims);
+    let err = validateTokenClaims(claims);
     if (err) {
         throw err;
     }
@@ -99,7 +104,7 @@ export function validateTokenAndGetClaims(secret, token, validationFunc) {
     return claims;
 }
 
-function validateTokenClaims(validationFunc, claims) {
+function validateTokenClaims(claims) {
     const now = Math.floor(Date.now() / 1000);
 
     if (now > claims.exp) {
@@ -113,12 +118,6 @@ function validateTokenClaims(validationFunc, claims) {
 
     if (now < claims.nbf) {
         return "token is not active";
-    }
-
-
-    let err = validationFunc(claims);
-    if (err) {
-        return err;
     }
 
     return null;
