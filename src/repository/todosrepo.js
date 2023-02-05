@@ -14,6 +14,20 @@ export class TodosRepo {
         this.todos = this.database.collection('todos');
     }
 
+    async migrateCollection() {
+        console.log(`Check and create "todos" collection indexes`);
+        let exists = await this.todos.indexExists('user_id_index');
+        if (!exists) {
+            console.log(`Create user_id index for "todos" collection`);
+            await this.todos.createIndex(
+                { userID: 1 },
+                {
+                    name: 'user_id_index',
+                }
+            );
+        }
+    }
+
     async getTodos(userID) {
         const query = {
             userID: userID,

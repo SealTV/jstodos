@@ -25,7 +25,11 @@ const redisCli = await getRedisConnection();
 const mongoClient = getMongoConnection();
 const db = mongoClient.db('todos')
 const tRepo = new TodosRepo(db);
+
+await tRepo.migrateCollection();
+
 const uRepo = new UserRepo(db);
+await uRepo.migrateCollection();
 
 const tokensRepo = new TokensRepo(redisCli);
 
