@@ -89,7 +89,9 @@ export function validateTokenAndGetClaims(secret, token) {
         .createHmac('sha256', secret)
         .update(`${header}.${body}`)
         .digest()
-        .toString('base64').replace(/={1,2}$/, '')
+        .toString('base64')
+        .replace(/={1,2}$/, '');
+
     if (currentSignature !== signature) {
         throw new Error("invalid token signature");
     }
