@@ -44,7 +44,7 @@ export class UserRouter {
     }
 
     getAuthMiddleware() {
-        return jwt.auth(this.accessTokenSecret, this.verifyClaims);
+        return jwt.auth(accessTokenSecret, this.verifyClaims);
     }
 
     verifyClaims(req, res, claims) {
