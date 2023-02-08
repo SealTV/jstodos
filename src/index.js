@@ -15,7 +15,7 @@ import { newRateLimmiterMiddleware } from './middleware/rateLimitter.js';
 
 import { MongoClient } from "mongodb";
 
-import { Server } from "./router/router.js";
+import { Server } from "./routers/router.js";
 import { TodosRepo, UserRepo, TokensRepo } from "./repository/repo.js";
 import { UserApp } from './app/user.js';
 

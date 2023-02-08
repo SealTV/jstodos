@@ -30,6 +30,20 @@ export class TodosRouter {
         return router;
     }
 
+    /**
+     * @openapi
+     * 
+     * /todos:
+     *  get:
+     *      produces:
+     *          - application/json
+     *      parameters:
+     *          - name: JWT Token
+     *            in: header
+     *            tpye: string
+     * @param {*} req 
+     * @param {*} res 
+     */
     async getTodos(req, res) {
         try {
             let result = await this.repo.getTodos(req.userID);
